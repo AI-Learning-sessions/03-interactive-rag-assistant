@@ -1,3 +1,6 @@
+
+import uuid
+
 import chromadb
 from langchain_core.documents import Document
 
@@ -29,9 +32,17 @@ class VectorStore:
         Store documents, metadata, and embeddings in ChromaDB.
         """
 
+        if len(documents) != len(embeddings):
+            raise ValueError(
+                "The number of documents must match the number of embeddings."
+            )
+
+        if not documents:
+            return
+
         ids = [
-            f"doc-{index}"
-            for index in range(len(documents))
+            str(uuid.uuid4())
+            for _ in documents
         ]
 
         self.collection.add(
@@ -56,7 +67,20 @@ class VectorStore:
         Search for the most semantically similar documents.
         """
 
+        if top_k < 1:
+            raise ValueError("top_k must be at least 1.")
+
+        count = self.collection.count()
+
+        if count == 0:
+            return {
+                "documents": [[]],
+                "metadatas": [[]],
+                "ids": [[]],
+                "distances": [[]],
+            }
+
         return self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=top_k,
+            n_results=min(top_k, count),
         )
