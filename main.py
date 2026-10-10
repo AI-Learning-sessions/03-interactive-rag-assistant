@@ -156,7 +156,26 @@ if document:
                 st.subheader("Answer")
                 st.write(result["answer"])
 
-                st.subheader("Sources")
+                
+                fallback_answer = "I could not find the answer in the provided document."
+
+                if fallback_answer.lower() in result["answer"].lower():
+                    st.info("No supporting information was found in the document.")
+                else:
+                    st.subheader("Sources")
+                    seen_sources = set()
+
+                    for source in result["sources"]:
+                        source_name = os.path.basename(
+                            source.get("source", document["name"])
+                        )
+                        page = source.get("page", "Unknown")
+                        source_key = (source_name, page)
+
+                        if source_key not in seen_sources:
+                            seen_sources.add(source_key)
+                            st.write(f"📄 {source_name} — Page {page}")
+
                 seen_sources = set()
 
                 for source in result["sources"]:
